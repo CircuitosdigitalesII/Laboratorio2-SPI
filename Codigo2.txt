@@ -1,0 +1,58 @@
+Laboratorio2-SPI
+================
+
+//Codigo2
+//El código del segundo pic es muy similar.
+
+// CABECERA 
+
+#include<18f4550.h>
+#FUSES INTHS,MCLR,PUT,BROWNOUT
+#use delay(INTERNAL=8MHZ)
+#include<LCD.c>
+
+
+// VARIABLES GLOBALES 
+
+int dato=0; // en el pic2 hemos empleado la misma variable
+
+
+// PRINCIPAL 
+
+void main()
+{
+ SETUP_SPI(SPI_SLAVE|SPI_L_TO_H|SPI_CLK_DIV_16);  // configuramos el pic2 como esclavo cuando ejecutamos el programa
+ lcd_init();
+ printf(lcd_putc,"Pulse Boton 2\nPara Enviar");
+ while(true)
+ {
+  if(input(PIN_A0)==1)
+  {
+   while(input(PIN_A0)==1){}
+   output_bit(PIN_A4,1);  // activamos el pin RA4 
+   delay_ms(50);
+   printf(lcd_putc,"\fEnviando");
+   SPI_WRITE(dato);   // escribe el dato SPI
+   delay_ms(50);
+   SETUP_SPI(SPI_SLAVE|SPI_L_TO_H|SPI_CLK_DIV_16);  // configuramos el pic2 como esclavo
+   delay_ms(50);
+   lcd_gotoxy(1,2);
+   printf(lcd_putc,"Dato impar: %d",dato);
+   output_bit(PIN_A4,0);
+  }
+  if(SPI_DATA_IS_IN()) // si recibe datos SPI
+  {
+   printf(lcd_putc,"\fRecibido");
+   dato=SPI_READ(); // almacenamos el dato en la variable
+   delay_ms(50);
+   SETUP_SPI(SPI_MASTER|SPI_L_TO_H|SPI_CLK_DIV_16); // configuramos el pic2 como maestro
+   delay_ms(50);
+   lcd_gotoxy(1,2);
+   printf(lcd_putc,"Dato par: %d",dato);
+   dato++;
+   output_bit(PIN_A4,1);
+  }
+ }
+ delay_ms(500);
+}
+
